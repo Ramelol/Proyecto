@@ -302,6 +302,7 @@ def _get_args():
 
 
 def main():
+    print("nnnn")
     args = _get_args()
     term = LiteXTerm(args.serial_boot, args.kernel, args.kernel_adr)
     term.console.configure()
