@@ -3,7 +3,7 @@ BUILD_DIR=../build/
 include $(BUILD_DIR)/software/include/generated/variables.mak
 include $(SOC_DIRECTORY)/software/common.mak
 
-OBJECTS=isr.o sdcard.o main.o
+OBJECTS=isr.o  spiSD.o spiLCD.o main.o
 
 all: firmware.bin
 

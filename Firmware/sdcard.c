@@ -122,6 +122,7 @@ static void sdclk_get_config(unsigned int freq, unsigned int *best_m, unsigned i
 void sdclk_set_clk(unsigned int freq) {
 	unsigned int clk_m, clk_d;
 
+	printf("Frecuencia: %i\n", freq);
 	sdclk_get_config(1000*freq, &clk_m, &clk_d);
 	sdclk_set_config(clk_m, clk_d);
 }
@@ -209,6 +210,7 @@ int sdcard_wait_response(void) {
 #ifdef SDCARD_DEBUG
 		printf("%08x\n", buffer[i]);
 #endif
+		printf("%08x\n", buffer[i]);
 		sdcard_response[i] = buffer[i];
 	}
 
@@ -536,13 +538,16 @@ int sdcard_init(void) {
 	sdcard_go_idle();
 	busy_wait(1);
 	sdcard_send_ext_csd();
-
+	
 	/* wait for card to be ready */
 	/* FIXME: 1.8v support */
+	// 
 	for(;;) {
 		sdcard_app_cmd(0);
 		sdcard_app_send_op_cond(1, 0);
+		printf( "sdcard_response[3]: %x\n  ",sdcard_response[3] );
 		if (sdcard_response[3] & 0x80000000) {
+			printf( "sdcard_response[3]: %x\n  ",sdcard_response[3] );
 			break;
 		}
 		busy_wait(1);

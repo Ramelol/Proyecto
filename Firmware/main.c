@@ -6,9 +6,15 @@
 #include <uart.h>
 #include <console.h>
 #include "sdcard.h"
+#include "spiLCD.h"
+#include "spiSD.h"
 #include <generated/csr.h>
 
 
+static uint16_t prueba[] = { ORO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, BLANCO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, PLATA, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,PLATA, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO,ROJO, ORO, AZULOSCURO, GRIS,INDIGO, ROJO, GRIS, ROJO, AZUL, ORO, ROJO, AZULOSCURO, ROJO, GRIS, ROJO, ROJO, INDIGO,ORO
+};
+
+static uint16_t fondo = BLANCO;
 
 static void busy_wait(unsigned int ds)
 {
@@ -88,13 +94,14 @@ static void help(void)
 	puts("display                         - display test");
 	puts("led                             - led test");
 	puts("switch                          - switch test");
-	puts("sdclk <freq>   - SDCard set clk frequency (Mhz)");
 	puts("knight                          - knight Rider");
-	puts("sdInit       - SDCard initialization");
+	puts("sdclk <freq>   - SDCard set clk frequency (Mhz)");	
+	puts("sdinit       - SDCard initialization");
 	puts("sdtest <loops> - SDCard test");
+	puts("lcdtest  -  lcdtest");
 }
 
-static void knight_rider(void)
+/*static void knight_rider(void)
 {
 	int i;
 	printf("knightRider_test...\n");
@@ -106,12 +113,7 @@ static void knight_rider(void)
 		leds_out_write(i);
 		busy_wait(1);
 	}
-
-
-
-
-
-}
+}*/
 static void reboot(void)
 {
 	asm("call r0");
@@ -127,7 +129,7 @@ static void display_test(void)
 		display_write_write(1);
 	}
 }
-
+/*
 static void led_test(void)
 {
 	int i;
@@ -136,17 +138,93 @@ static void led_test(void)
 		leds_out_write(i);
 		busy_wait(10);
 	}
-}
+}*/
 static void switch_test(void)
 {
 	int i;
 	printf("switch_test...\n");
 	for(i=0;i<30;i++){
 		unsigned short int s = switches_in_read();
-		leds_out_write(s);
+		//leds_out_write(s);
+
+	}
+	
+}
+
+static void lcd_test(void)
+{
+	int i;
+	printf("lcd_test...\n");
+	for(i=0;i<30;i++){
+		unsigned short int s = switches_in_read();
+		printf("valor: %i\n", s);
+		if(s==0){
+			colorFondo(AZUL);
+		}else if(s==1){
+			colorFondo(BLANCO);
+		}else if(s==2){
+			colorFondo(GRIS);
+		}else if(s==3){
+			colorFondo(AZULOSCURO);
+		}else if(s==4){
+			colorFondo(ORO);
+		}else{
+			colorFondo(BEIGE);
+		}
 		busy_wait(10);
 	}
 	
+}
+
+static void test_LCD2(void){
+	printf("lcd_test...\n");
+	int e = 0;
+	int x = 0;
+	int y = 0;
+	for(int i=0;i<1000;i++){
+		unsigned short int s = buttons_in_read();
+		int xAnt = x;
+		int yAnt = y;
+		if (s==4){
+			x=x+20;		
+			e = 1;
+		}else if(s==16){
+			y=y+18;
+			e = 1;
+		}else if(s==8){
+			x=x-20;
+			e = 1;
+		}else if(s==2){
+			y=y-18;
+			e = 1;
+		}else if(s==1){
+			if(fondo == AZULOSCURO){
+				colorFondo(PLATA);
+				fondo = PLATA;
+			}else{
+			        colorFondo(AZULOSCURO);
+			        fondo = AZULOSCURO;
+			}
+			dibujarTileColor(ORO,x,y);
+		}	
+		if(x<0){
+			x==0;		
+		}
+		if(y<0){
+			y==0;
+		}
+		if(e == 1){
+			dibujarTileColor(fondo,xAnt,yAnt);
+			dibujarTileColor(ORO,x,y);
+		}
+		busy_wait(2);
+		e = 0;
+	}
+
+
+
+
+
 }
 
 
@@ -164,21 +242,35 @@ static void console_service(void)
 		reboot();
 	else if(strcmp(token, "display") == 0)
 		display_test();
-	else if(strcmp(token, "led") == 0)
-		led_test();
+	else if(strcmp(token, "led") == 0){
+		//led_test();
+	}	
 	else if(strcmp(token, "switch") == 0)
 		switch_test();
-	else if(strcmp(token, "knight") == 0)
-		 knight_rider();
+	else if(strcmp(token, "knight") == 0){
+		 //knight_rider();
+	}
 	else if(strcmp(token, "sdclk") == 0) {
 		token = get_token(&str);
-		sdclk_set_clk(atoi(token));
+		//sdclk_set_clk(atoi(token));
 	}
-	else if(strcmp(token, "sdInit") == 0)
-		switch_test();
-	else if(strcmp(token, "sdTest") == 0){
+	else if(strcmp(token, "sdinit") == 0){
+		//sdcard_init();
+	}
+	else if(strcmp(token, "sdtest") == 0){
 		token = get_token(&str);
-		sdcard_test(atoi(token));
+		int res = sdInit();
+		printf("Respuesta: %i\n", res);
+		//sdcard_test(atoi(token));
+	}
+	else if(strcmp(token, "lcdtest") == 0){
+		spiInit();
+		lcd_init();
+		colorFondo(AZULOSCURO);
+		fondo = AZULOSCURO;
+		dibujarTileColor(ORO,0,0);
+		test_LCD2();
+
 	}
 	prompt();
 }
