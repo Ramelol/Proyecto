@@ -92,13 +92,12 @@ _io = [
         IOStandard("LVCMOS33")
     ),
 
-#    ("sdcard", 0,
-     #   Subsignal("data", Pins("C2 E1 F1 D2"),Misc("PULLUP")),
-     #   Subsignal("cmd", Pins("C1"),Misc("PULLUP")),
-        #Subsignal("clk", Pins("B1")),
-     #  Subsignal("clk", Pins("B1")),
-     #   IOStandard("LVCMOS33"),Misc("SLEW=FAST")
-    #),
+    ("sdcard", 0,
+         Subsignal("data", Pins("C2 E1 F1 D2"),Misc("PULLUP")),
+         Subsignal("cmd", Pins("C1"),Misc("PULLUP")),
+         Subsignal("clk", Pins("B1")),
+        IOStandard("LVCMOS33"),Misc("SLEW=FAST")
+    ),
     ("pantalla_spi", 0,
 	Subsignal("cs_n", Pins("G13")),
         Subsignal("clk", Pins("F16")),
@@ -110,16 +109,16 @@ _io = [
     ("pantalla_control",  1, Pins("E16"), IOStandard("LVCMOS33")), #rs
     ("pantalla_control",  2, Pins("F13"), IOStandard("LVCMOS33")), #reset
 
-    ("sdcard_spi", 0,
-       Subsignal("cs_n", Pins("F1")),     
-       Subsignal("clk", Pins("B1")),
-       Subsignal("mosi", Pins("E1")),
-       Subsignal("miso", Pins("C2")),
-       IOStandard("LVCMOS33"),
-    ),
+    #("sdcard_spi", 0,
+    #   Subsignal("cs_n", Pins("F1")),     
+    #   Subsignal("clk", Pins("B1")),
+    #   Subsignal("mosi", Pins("E1")),
+    #   Subsignal("miso", Pins("C2")),
+    #   IOStandard("LVCMOS33"),
+    #),
 
-    ("sdcard_v",  0, Pins("C1"), IOStandard("LVCMOS33")), #vdd
-    ("sdcard_v",  1, Pins("D2"), IOStandard("LVCMOS33")), #vss - gnd
+    #("sdcard_v",  0, Pins("C1"), IOStandard("LVCMOS33")), #vdd
+    #("sdcard_v",  1, Pins("D2"), IOStandard("LVCMOS33")), #vss - gnd
 
 ]
 
@@ -154,12 +153,12 @@ class BaseSoC(SoCCore):
     csr_peripherals = [
         "dna",
         "xadc",
-        "rgbled",
-        "leds",
-        "switches",
+        #"rgbled",
+        #"leds",
+        #"switches",
         "buttons",
         #"adxl362",
-        "display",
+        #"display",
 	#"sdcard",
 	"sdclk",
         "sdphy",
@@ -169,9 +168,9 @@ class BaseSoC(SoCCore):
         "bist_generator",
         "bist_checker",
 	"pantalla_spi",
-	"pantalla_control",
-        "sdcard_spi",
-	"sdcard_v"
+	"pantalla_control"
+        #"sdcard_spi",
+	#"sdcard_v"
     ]
     csr_map_update(SoCCore.csr_map, csr_peripherals)
 
@@ -199,37 +198,37 @@ class BaseSoC(SoCCore):
         #self.submodules.leds = Led(user_leds)
 
         # Switches
-        user_switches = Cat(*[platform.request("user_sw", i) for i in range(16)])
-        self.submodules.switches = Switch(user_switches)
+        #user_switches = Cat(*[platform.request("user_sw", i) for i in range(16)])
+        #self.submodules.switches = Switch(user_switches)
 
         # Buttons
         user_buttons = Cat(*[platform.request("user_btn", i) for i in range(5)])
         self.submodules.buttons = Button(user_buttons)
 
         # RGB Led
-        self.submodules.rgbled  = RGBLed(platform.request("user_rgb_led",  0))
+        #self.submodules.rgbled  = RGBLed(platform.request("user_rgb_led",  0))
         
         # Accelerometer
         #self.submodules.adxl362 = SPIMaster(platform.request("adxl362_spi"))
 
         # Display
-        self.submodules.display = Display(sys_clk_freq)
-        self.comb += [
-            platform.request("display_cs_n").eq(~self.display.cs),
-            platform.request("display_abcdefg").eq(~self.display.abcdefg)
-		]
+        #self.submodules.display = Display(sys_clk_freq)
+        #self.comb += [
+         #   platform.request("display_cs_n").eq(~self.display.cs),
+         #  platform.request("display_abcdefg").eq(~self.display.abcdefg)
+	#	]
 	#bridge
-        #sdcard_pads = platform.request('sdcard')
+        sdcard_pads = platform.request('sdcard')
 	
 
         # sd
-        #self.submodules.sdclk = SDClockerS7(1,100e6,sdcard_pads)
-        #self.submodules.sdphy = SDPHY(sdcard_pads, platform.device)
-        #self.submodules.sdcore = SDCore(self.sdphy)
-        #self.submodules.sdtimer = Timer()
+        self.submodules.sdclk = SDClockerS7(1,100e6,sdcard_pads)
+        self.submodules.sdphy = SDPHY(sdcard_pads, platform.device)
+        self.submodules.sdcore = SDCore(self.sdphy)
+        self.submodules.sdtimer = Timer()
 
-        #self.submodules.bist_generator = BISTBlockGenerator(random=True)
-        #self.submodules.bist_checker = BISTBlockChecker(random=True)
+        self.submodules.bist_generator = BISTBlockGenerator(random=True)
+        self.submodules.bist_checker = BISTBlockChecker(random=True)
 
 	#spiLCD
         user_control = Cat(*[platform.request("pantalla_control", i) for i in range(3)])
@@ -238,9 +237,9 @@ class BaseSoC(SoCCore):
 
 	#spiSd
 
-        user_control_sd = Cat(*[platform.request("sdcard_v", i) for i in range(2)])
-        self.submodules.sdcard_spi = SPIMaster(platform.request("sdcard_spi"))        
-        self.submodules.sdcard_v = Led(user_control_sd)
+        #user_control_sd = Cat(*[platform.request("sdcard_v", i) for i in range(2)])
+        #self.submodules.sdcard_spi = SPIMaster(platform.request("sdcard_spi"))        
+        #self.submodules.sdcard_v = Led(user_control_sd)
 	
 
 
