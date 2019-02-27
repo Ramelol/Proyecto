@@ -91,10 +91,10 @@ static void help(void)
 	puts("Available commands:");
 	puts("help                            - this command");
 	puts("reboot                          - reboot CPU");
-	puts("display                         - display test");
-	puts("led                             - led test");
-	puts("switch                          - switch test");
-	puts("knight                          - knight Rider");
+	//puts("display                         - display test");
+	//puts("led                             - led test");
+	//puts("switch                          - switch test");
+	//puts("knight                          - knight Rider");
 	puts("sdclk <freq>   - SDCard set clk frequency (Mhz)");	
 	puts("sdinit       - SDCard initialization");
 	puts("sdtest <loops> - SDCard test");
@@ -240,28 +240,26 @@ static void console_service(void)
 		help();
 	else if(strcmp(token, "reboot") == 0)
 		reboot();
-	else if(strcmp(token, "display") == 0)
-		display_test();
+	//else if(strcmp(token, "display") == 0)
+	//	display_test();
 	else if(strcmp(token, "led") == 0){
 		//led_test();
 	}	
-	else if(strcmp(token, "switch") == 0)
-		switch_test();
+	//else if(strcmp(token, "switch") == 0)
+	//	switch_test();
 	else if(strcmp(token, "knight") == 0){
 		 //knight_rider();
 	}
 	else if(strcmp(token, "sdclk") == 0) {
 		token = get_token(&str);
-		//sdclk_set_clk(atoi(token));
+		sdclk_set_clk(atoi(token));
 	}
 	else if(strcmp(token, "sdinit") == 0){
-		//sdcard_init();
+		sdcard_init();
 	}
 	else if(strcmp(token, "sdtest") == 0){
 		token = get_token(&str);
-		int res = sdInit();
-		printf("Respuesta: %i\n", res);
-		//sdcard_test(atoi(token));
+		sdcard_test(atoi(token));
 	}
 	else if(strcmp(token, "lcdtest") == 0){
 		spiInit();

@@ -21,7 +21,7 @@ void spiInit(void){
 	unsigned config = 0*OFFLINE;
         config |= 0*CS_POLARITY | 0*CLK_POLARITY | 0*CLK_PHASE;
         config |= 0*LSB_FIRST | 0*HALF_DUPLEX;
-        config |= 16*DIV_READ | 8*DIV_WRITE;
+        config |= 16*DIV_READ | 16*DIV_WRITE;
 	pantalla_spi_xfer_write( 0b1 | 16*WRITE_LENGTH);	
         pantalla_spi_config_write(config);
 	printf("Configuración de SPI finalizada: %x\n", config );
