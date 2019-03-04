@@ -5,8 +5,9 @@
 extern void periodic_isr(void);
 
 void isr(void);
-void isr(void)
-{
+void buttons_isr(void);
+
+void isr(void){
 	unsigned int irqs;
 
 	irqs = irq_pending() & irq_getmask();

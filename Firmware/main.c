@@ -95,9 +95,9 @@ static void help(void)
 	//puts("led                             - led test");
 	//puts("switch                          - switch test");
 	//puts("knight                          - knight Rider");
-	puts("sdclk <freq>   - SDCard set clk frequency (Mhz)");	
-	puts("sdinit       - SDCard initialization");
-	puts("sdtest <loops> - SDCard test");
+	//puts("sdclk <freq>   - SDCard set clk frequency (Mhz)");	
+	//puts("sdinit       - SDCard initialization");
+	puts("sdtest   - SDCard test");
 	puts("lcdtest  -  lcdtest");
 }
 
@@ -242,24 +242,18 @@ static void console_service(void)
 		reboot();
 	//else if(strcmp(token, "display") == 0)
 	//	display_test();
-	else if(strcmp(token, "led") == 0){
-		//led_test();
-	}	
-	//else if(strcmp(token, "switch") == 0)
-	//	switch_test();
-	else if(strcmp(token, "knight") == 0){
-		 //knight_rider();
-	}
 	else if(strcmp(token, "sdclk") == 0) {
 		token = get_token(&str);
-		sdclk_set_clk(atoi(token));
+		//sdclk_set_clk(atoi(token));
 	}
 	else if(strcmp(token, "sdinit") == 0){
-		sdcard_init();
+		//sdcard_init();
 	}
 	else if(strcmp(token, "sdtest") == 0){
-		token = get_token(&str);
-		sdcard_test(atoi(token));
+		//token = get_token(&str);
+		//sdcard_test(atoi(token));
+		spiSDInit();
+		sdInit();
 	}
 	else if(strcmp(token, "lcdtest") == 0){
 		spiInit();
