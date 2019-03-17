@@ -17,8 +17,8 @@ from litex.soc.cores.spi import SPIMaster
 from litex.soc.cores.timer import Timer
 from litex.soc.interconnect.csr_eventmanager import *
 
-from ios import Led, RGBLed, Button, Switch
-
+from ios import Led, RGBLed, Button, Switch, Buttoninter
+from btn_itrupt import*
 #
 # platform
 #
@@ -26,11 +26,14 @@ from ios import Led, RGBLed, Button, Switch
 _io = [
 
 
-    ("user_btn", 0, Pins("N17"), IOStandard("LVCMOS33")),
-    ("user_btn", 1, Pins("P18"), IOStandard("LVCMOS33")),
-    ("user_btn", 2, Pins("P17"), IOStandard("LVCMOS33")),
-    ("user_btn", 3, Pins("M17"), IOStandard("LVCMOS33")),
-    ("user_btn", 4, Pins("M18"), IOStandard("LVCMOS33")),
+    ("user_btn", 0, Pins("H16"), IOStandard("LVCMOS33")),#h16
+    ("user_btn", 1, Pins("G13"), IOStandard("LVCMOS33")),
+    ("user_btn", 2, Pins("H14"), IOStandard("LVCMOS33")),
+    ("user_btn", 3, Pins("G16"), IOStandard("LVCMOS33")),
+    ("user_btn", 4, Pins("F16"), IOStandard("LVCMOS33")),
+    ("user_btn", 5, Pins("D14"), IOStandard("LVCMOS33")),
+    ("user_btn", 6, Pins("E16"), IOStandard("LVCMOS33")),
+    ("user_btn", 7, Pins("F13"), IOStandard("LVCMOS33")),
 
     ("clk100", 0, Pins("E3"), IOStandard("LVCMOS33")),
 
@@ -42,23 +45,17 @@ _io = [
         IOStandard("LVCMOS33"),
     ),
 
- 
-    #("sdcard", 0,
-    #     Subsignal("data", Pins("C2 E1 F1 D2"),Misc("PULLUP")),
-    #     Subsignal("cmd", Pins("C1"),Misc("PULLUP")),
-    #     Subsignal("clk", Pins("B1")),
-    #    IOStandard("LVCMOS33"),Misc("SLEW=FAST")
-    #),
     ("pantalla_spi", 0,
-	Subsignal("cs_n", Pins("G13")),
-        Subsignal("clk", Pins("F16")),
-        Subsignal("mosi", Pins("G16")),
-	Subsignal("miso", Pins("H14")),
+	Subsignal("cs_n", Pins("G17")),
+        Subsignal("clk", Pins("D17")),
+        Subsignal("mosi", Pins("C17")),
+	Subsignal("miso", Pins("K1")),
         IOStandard("LVCMOS33"),
     ),
-    ("pantalla_control",  0, Pins("D14"), IOStandard("LVCMOS33")), #led
-    ("pantalla_control",  1, Pins("E16"), IOStandard("LVCMOS33")), #rs
-    ("pantalla_control",  2, Pins("F13"), IOStandard("LVCMOS33")), #reset
+    ("pantalla_control",  0, Pins("E17"), IOStandard("LVCMOS33")), #led
+    ("pantalla_control",  1, Pins("D18"), IOStandard("LVCMOS33")), #rs
+    ("pantalla_control",  2, Pins("E18"), IOStandard("LVCMOS33")), #reset
+    ("led_GB",  0, Pins("F18"), IOStandard("LVCMOS33")), #ledAzul
 
     ("sdcard_spi", 0,
        Subsignal("cs_n", Pins("H17")),     
@@ -111,20 +108,26 @@ class BaseSoC(SoCCore):
         "user_btn",
 	"pantalla_spi",
 	"pantalla_control",
+	"led_GB",
         "sdcard_spi",
 	"sdcard_v"
     ]
     csr_map_update(SoCCore.csr_map, csr_peripherals)
 
+
     def __init__(self, platform):
         sys_clk_freq = int(100e6)
         # SoC with CPU
+        interrupt_map = {
+            "buttons" : 4,
+        }
+        SoCCore.interrupt_map.update(interrupt_map)
         SoCCore.__init__(self, platform,
             cpu_type="lm32",
             clk_freq=100e6,
             ident="CPU Test SoC", ident_version=True,
             integrated_rom_size=0x8000,
-            integrated_main_ram_size=16*1024)
+            integrated_main_ram_size=32*1024)
 
         # Clock Reset Generation
         self.submodules.crg = CRG(platform.request("clk100"), ~platform.request("cpu_reset"))
@@ -137,10 +140,12 @@ class BaseSoC(SoCCore):
 
    
         # Buttons
-        user_buttons = Cat(*[platform.request("user_btn", i) for i in range(5)])
-        self.submodules.buttons = Button(user_buttons)
+        user_buttons = Cat(*[platform.request("user_btn", i) for i in range(8)])
+        self.submodules.buttons = btnintrupt(user_buttons)
 
-
+	#LedAzul
+        user_led = Cat(*[platform.request("led_GB", i) for i in range(1)])
+        self.submodules.pantalla_control = Led(user_led)
 	#spiLCD
         user_control = Cat(*[platform.request("pantalla_control", i) for i in range(3)])
         self.submodules.pantalla_spi = SPIMaster(platform.request("pantalla_spi"))        
@@ -152,13 +157,12 @@ class BaseSoC(SoCCore):
         self.submodules.sdcard_spi = SPIMaster(platform.request("sdcard_spi"))   
         self.submodules.sdcard_v = Led(user_control_sd)     
 
-        interrupt_map = {
-            "user_btn" : 4,
-        }
-        SoCCore.interrupt_map.update(interrupt_map)
-        print (SoCCore.interrupt_map)
-	
 
+        print (SoCCore.interrupt_map)
+
+  
+ 
+  
 
 soc = BaseSoC(platform)
 
