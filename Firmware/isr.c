@@ -276,6 +276,7 @@ void botton_isr(void){
 	if(pednig  & 1<<5 ){
 		if(juegoIniciado == 0){
 			iniciarJuego();
+			aumentarNivel();
 			posNave1 = 88;
 			nave1 = leerNave1();
 			nave1_color = leerNave1_color();
