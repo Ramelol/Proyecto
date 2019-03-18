@@ -14,7 +14,7 @@ void delaySD (unsigned int time){
 
 	timer0_en_write(0);
 	timer0_reload_write(0);
-	timer0_load_write(SYSTEM_CLOCK_FREQUENCY/10*time);
+	timer0_load_write(SYSTEM_CLOCK_FREQUENCY/1000*time);
 	timer0_en_write(1);
 	timer0_update_value_write(1);
 	while(timer0_value_read()) timer0_update_value_write(1);
@@ -51,7 +51,8 @@ void ponerModoSpi(void){
 void escribirSpi(uint8_t data){
 
 
-	printf("Escrito: %x \n", data);
+	//printf(" ");
+	delaySD(1);	
 	sdcard_spi_mosi_data_write(data<<24);
 	sdcard_spi_start_write(1);
 	while(sdcard_spi_active_read());
@@ -85,40 +86,45 @@ void sdInit(void){
 	sdcard_v_out_write(0b00);
 
 
+	escribirSpi(0xFF);
 
-	escribirSpi(0xFF);
-	escribirSpi(0x40);
-	escribirSpi(0x00);
-	escribirSpi(0x00);
-	escribirSpi(0x00);
-	escribirSpi(0x00);
-       	escribirSpi(0x95);
-	escribirSpi(0xFF);
-       	escribirSpi(0xFF);
+//	do{
+		escribirSpi(0x40);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+       		escribirSpi(0x95);
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+
+
 	//escribirSpi(0xFF);
        	//escribirSpi(0xFF);
 	
-	resp = leerSpi();
-	
+		resp = leerSpi();
+//	}while(resp!=0x01);
+		
 	printf("Respuesta CMD0: %x \n", resp);
 
+	//CMD8
+        //do{
+		escribirSpi(0x48);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x01);
+		escribirSpi(0xAA);
+		escribirSpi(0x87);
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+
+
+		resp = leerSpi();
 	
 
-	//CMD8
-        
-	escribirSpi(0x48);
-	escribirSpi(0x00);
-	escribirSpi(0x00);
-	escribirSpi(0x01);
-	escribirSpi(0xAA);
-	escribirSpi(0x87);
-	escribirSpi(0xFF);
-       	escribirSpi(0xFF);
+		printf("Respuesta CMD8: %x \n", resp);
 
-	resp = leerSpi();
-
-	printf("Respuesta CMD8: %x \n", resp);
-
+	//}while(!(resp==0x01 || resp==0x05));
 	if(resp == 0x01){
 		printf("SD version 2 \n");
 	}else if(resp == 0x05){
@@ -127,20 +133,23 @@ void sdInit(void){
 
 
 	//ACMD41
+	
+	do{
 
-        escribirSpi(0x69);   
-        escribirSpi(0x00);    
-        escribirSpi(0x00);
-        escribirSpi(0x00);
-        escribirSpi(0x00);
-        escribirSpi(0xFF);
-	escribirSpi(0xFF);
- 	escribirSpi(0xFF);
-
-	resp = leerSpi();
-
-	printf("Respuesta ACMD41: %x \n", resp);
-
+        	escribirSpi(0x69);   
+        	escribirSpi(0x40);    
+        	escribirSpi(0x00);
+        	escribirSpi(0x00);
+        	escribirSpi(0x00);
+        	escribirSpi(0xFF);
+		escribirSpi(0xFF);
+ 		escribirSpi(0xFF);
+	
+		resp = leerSpi();
+	
+		printf("Respuesta ACMD41: %x \n", resp);
+	
+ 	}while( (resp & 0x1)  != 0x00  );	
 
 	//CMD1
 
@@ -169,8 +178,8 @@ void sdInit(void){
 	escribirSpi(0x50);
 	escribirSpi(0x00);
 	escribirSpi(0x00);
+	escribirSpi(0x02);
 	escribirSpi(0x00);
-	escribirSpi(0x01);
 	escribirSpi(0xFF);
 	escribirSpi(0xFF);
        	escribirSpi(0xFF);
@@ -179,20 +188,152 @@ void sdInit(void){
 
 	printf("Respuesta CMD16: %x \n", resp);
 }
+int* p(void){
 
-uint8_t leerBloque (uint32_t direccion){
+	int a[3];
+	a[0] = 1;
+	a[1] = 2;
+	a[2] = 3;
+	return a ;
+
+};
+uint8_t* leerNave1 (void){
+	static uint8_t nave1[32];
+	uint8_t resp;
+	sdcard_v_out_write(0b10);
+	//CMD17
+	do{
+		escribirSpi(0x51);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x02);
+		escribirSpi(0xFF);
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		//printf("Respuesta 1  CMD17: %x \n", resp);
+	}while(resp != 0x00);
+	do{
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		//printf("Respuesta 2  CMD17: %x \n", resp);
+
+	}while(resp != 0xfe);
+	//printf("\n-----------\n");
+	int k = 0;
+	for(int i=0;i<32;i++){
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		nave1[i] = resp;				
+		//printf(" %x ", nave1[i][0]);
+	}
+	escribirSpi(0xFF);
+  	escribirSpi(0xFF);
+	return nave1;
+}
+
+
+uint8_t* leerNave1_color (void){
+	static uint8_t nave1[32];
+	uint8_t resp;
+	sdcard_v_out_write(0b10);
+	//CMD17
+	do{
+		escribirSpi(0x51);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x02);
+		escribirSpi(0xFF);
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		//printf("Respuesta 1  CMD17: %x \n", resp);
+	}while(resp != 0x00);
+	do{
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		//printf("Respuesta 2  CMD17: %x \n", resp);
+
+	}while(resp != 0xfe);
+	//printf("\n-----------\n");
+	int k = 0;
+	for(int i=0;i<32;i++){
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+	}
+	for(int i=0;i<32;i++){
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		nave1[i] = resp;				
+		//printf(" %x ", nave1[i][0]);
+	}
+	escribirSpi(0xFF);
+  	escribirSpi(0xFF);
+	return nave1;
+}
+
+
+
+
+
+
+
+uint8_t* leerNombre (void){
+	static uint8_t nombre[54];
+	uint8_t resp;
+	sdcard_v_out_write(0b10);
+	//CMD17
+	do{
+		escribirSpi(0x51);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x01);
+		escribirSpi(0xFF);
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		//printf("Respuesta 1  CMD17: %x \n", resp);
+	}while(resp != 0x00);
+	do{
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		//printf("Respuesta 2  CMD17: %x \n", resp);
+
+	}while(resp != 0xfe);
+	printf("\n-------------------------------------------\n");
+	for(int i=0;i<54;i++){
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		nombre[i] = resp;
+		printf(" %x ", nombre[i]);
+	}
+	
+	escribirSpi(0xFF);
+  	escribirSpi(0xFF);
+	return nombre;
+}
+uint8_t leerBloque (void){
 	uint8_t resp = 0;
 	uint8_t data = 0;
+	sdcard_v_out_write(0b10);
 	//CMD17
-        
-	escribirSpi(0x51);
-	escribirSpi(0x00);
-	escribirSpi(0x00);
-	escribirSpi(0x02);
-	escribirSpi(0x00);
-	escribirSpi(0xFF);
-
 	do{
+		escribirSpi(0x51);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x00);
+		escribirSpi(0x02);
+		escribirSpi(0xFF);
 		escribirSpi(0xFF);
        		escribirSpi(0xFF);
 		resp = leerSpi();
@@ -203,31 +344,35 @@ uint8_t leerBloque (uint32_t direccion){
 		escribirSpi(0xFF);
        		escribirSpi(0xFF);
 		resp = leerSpi();
-		printf("Respuesta 2  CMD17: %x \n", resp);
+		//printf("Respuesta 2  CMD17: %x \n", resp);
 
 	}while(resp != 0xfe);
-
+	//printf("\n-------------------------------------------\n");
+	int c = 0;
 	do{
 		escribirSpi(0xFF);
        		escribirSpi(0xFF);
 		resp = leerSpi();
-		printf("Dato: %x \n", resp);
+		printf(" %x ", resp);
+		c++;
 
-	}while(resp != 0xff);
+	}while(c != 512);
 	data = leerSpi();
 	printf("Dato leido: %x \n", data);
+	escribirSpi(0xFF);
+  	escribirSpi(0xFF);
 }
 
-void escribirBloque(uint8_t data, uint32_t direccion){
-
+void escribirNombre(void){
 	uint8_t resp = 0;	
 	//CMD24    
 	escribirSpi(0x58);
 	escribirSpi(0x00);
 	escribirSpi(0x00);
-	escribirSpi(0x02);
 	escribirSpi(0x00);
+	escribirSpi(0x01);
 	escribirSpi(0xFF);
+
 
 	do{
 		escribirSpi(0xFF);
@@ -237,7 +382,133 @@ void escribirBloque(uint8_t data, uint32_t direccion){
 
 	}while(resp != 0x00);
 	escribirSpi(0xFE);
-	escribirSpi(0xAA);
+	int c = 0;
+
+	//G
+	escribirSpi(0xFF);
+	escribirSpi(0b00001110);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010011);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00001110);
+
+	//A
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011011);
+	escribirSpi(0xFF);	
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+
+	//L
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+
+	//A
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011011);
+	escribirSpi(0xFF);	
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+
+	//G
+	escribirSpi(0xFF);
+	escribirSpi(0b00001110);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010011);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010000);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00001110);
+
+	//A
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011011);
+	escribirSpi(0xFF);	
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00011111);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+	escribirSpi(0xFF);
+	escribirSpi(0b00010001);
+
+	do{
+       		escribirSpi(0xAA);
+		c++;
+
+	}while(c != 506);
 	escribirSpi(0xFF);
         escribirSpi(0xFF);
 	do{
@@ -246,12 +517,218 @@ void escribirBloque(uint8_t data, uint32_t direccion){
 		resp = leerSpi();
 		printf("Respuesta 2 CMD24: %x \n", resp);
 
-	}while(resp != 0xfF);
-
-
+	}while(resp != 0xFF);
 
 }
 
+void escribirNave1(void){
+	uint8_t resp = 0;	
+	//CMD24    
+	escribirSpi(0x58);
+	escribirSpi(0x00);
+	escribirSpi(0x00);
+	escribirSpi(0x00);
+	escribirSpi(0x02);
+	escribirSpi(0xFF);
+
+
+	do{
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		printf("Respuesta 1 CMD24: %x \n", resp);
+
+	}while(resp != 0x00);
+	escribirSpi(0xFE);
+	int c = 0;
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b10000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b10000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b10000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000001);
+	escribirSpi(0XFF);
+	escribirSpi(0b11000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000001);
+	escribirSpi(0XFF);
+	escribirSpi(0b11000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00001001);
+	escribirSpi(0XFF);
+	escribirSpi(0b11001000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00001001);
+	escribirSpi(0XFF);
+	escribirSpi(0b11001000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00001011);
+	escribirSpi(0XFF);
+	escribirSpi(0b11101000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01001111);
+	escribirSpi(0XFF);
+	escribirSpi(0b11111001);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01001111);
+	escribirSpi(0XFF);
+	escribirSpi(0b11111001);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01001111);
+	escribirSpi(0XFF);
+	escribirSpi(0b11111001);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01011111);
+	escribirSpi(0XFF);
+	escribirSpi(0b11111101);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01111111);
+	escribirSpi(0XFF);
+	escribirSpi(0b11111111);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01110111);
+	escribirSpi(0XFF);
+	escribirSpi(0b11110111);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01100110);
+	escribirSpi(0XFF);
+	escribirSpi(0b10110011);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b10000001);
+
+
+
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00001000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00001000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00001000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00001000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b10000001);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b01000001);
+	escribirSpi(0XFF);
+	escribirSpi(0b11000001);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000001);
+	escribirSpi(0XFF);
+	escribirSpi(0b01000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000010);
+	escribirSpi(0XFF);
+	escribirSpi(0b00100000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000110);
+	escribirSpi(0XFF);
+	escribirSpi(0b00110000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000110);
+	escribirSpi(0XFF);
+	escribirSpi(0b00110000);
+
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+	escribirSpi(0XFF);
+	escribirSpi(0b00000000);
+
+
+
+
+
+
+
+
+
+
+	do{
+       		escribirSpi(0xAA);
+		c++;
+
+	}while(c != 448);
+	escribirSpi(0xFF);
+        escribirSpi(0xFF);
+	do{
+		escribirSpi(0xFF);
+       		escribirSpi(0xFF);
+		resp = leerSpi();
+		printf("Respuesta 2 CMD24: %x \n", resp);
+
+	}while(resp != 0xFF);
+
+}
 
 
 

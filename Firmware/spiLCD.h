@@ -55,6 +55,7 @@
 
 #define AZUL   0X001F
 #define BLANCO 0XFFFF
+#define NEGRO 0X0000
 #define GRIS 0x8410 
 #define AZULOSCURO 0x0011
 #define ORO 0xFEA0
@@ -65,13 +66,13 @@
 #define SIENNA 0xA285
 
 void spiInit(void);
-void escribirLCD(  unsigned int cs, unsigned int  data);
+void escribirLCD(unsigned int cs, unsigned int data);
 void delay (unsigned int time);
 void lcd_init(void);
 void dibujarPunto(unsigned int x, unsigned int  y, uint16_t color);
-void dibujarImagen(uint16_t* imagen, int tam);
-void dibujarTile(uint16_t* imagen, int x, int y);
-void dibujarTileColor(uint16_t color, int x, int y);
+void dibujarImagen(uint16_t* imagen,int x, int y, int tamX, int tamY);
+void borrarImagen(int x, int y, int tamX, int tamY);
+void dibujarTileColor(uint16_t color, int x, int y, int tam);
 void colorFondo(uint16_t color);
 
 

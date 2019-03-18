@@ -11,11 +11,16 @@
 #include "spiLCD.h"
 
 
+void dibujarTileColor(uint16_t color, int x, int y, int tam){
+	for(int i=y; i<y+tam; i++){
+		for(int j=x;j<x+tam;j++){
+			dibujarPunto(i,j,color);	
+		}	
+	}
+}
+
 void spiInit(void){
 
-	//pantalla_spi_config_write(0x11110000);  //div_write div_read 00 b 0x11110000
-	//pantalla_spi_xfer_write(0x100001);// write_length*24 | 0b1    0x100001
-	//printf("Configuración de SPI finalizada: %i\n", pantalla_spi_config_read() );
 
 	//Configuración SPI
 	unsigned config = 0*OFFLINE;
@@ -36,26 +41,6 @@ void escribirLCD(  unsigned int rs, unsigned int data){
 	pantalla_spi_mosi_data_write(data<<16);
 	pantalla_spi_start_write(1);
 	while(pantalla_spi_active_read()){}
-	 /*
-	spiInit();
-	unsigned int val = data;
-	pantalla_spi_xfer_write( 0b1 | 16*WRITE_LENGTH);
-	pantalla_spi_mosi_data_write(val<<16);
-	printf( "Datos mosi: %x\n", pantalla_spi_mosi_data_read());
-	pantalla_spi_start_write(1);
-	while( pantalla_spi_active_read()  & 0x1 );*/
-
-	/*if(rs==0){
-		pantalla_control_out_write(0b101);
-	}else{
-		pantalla_control_out_write(0b111);
-	}
-	spiInit();
-	pantalla_spi_xfer_write( 0b1 | 16*WRITE_LENGTH);
-	pantalla_spi_mosi_data_write(data<<16);
-	pantalla_spi_start_write(1);
-	while(pantalla_spi_active_read()){
-	};*/
 }
 
 
@@ -80,17 +65,23 @@ void dibujarPunto(unsigned int x, unsigned int  y, uint16_t color){
 	escribirLCD(1,color);
 }
 
-void dibujarImagen(uint16_t* imagen , int tam){
-	int contador = 0;
-	for(int i=0; i<176; i++){
-		for(int j=0;j<220;j++){
-			if(contador < tam){
-				dibujarPunto(i,j,imagen[contador]);
-				printf("Color: %x\n", imagen[contador]);
-				contador++;
-			}else{
-				dibujarPunto(i,j,BLANCO);
-			}
+
+
+void dibujarImagen(uint16_t* imagen,int x,int y, int tamX, int tamY){
+	int contador=0;	
+	for(int i=y; i>y-tamY; i--){
+		for(int j=x; j<x+tamX  ;j++){
+			dibujarPunto(i,j,imagen[contador]);
+			contador++;
+			
+		}	
+	}
+}
+void borrarImagen(int x, int y, int tamX, int tamY){
+	for(int i=y; i>y-tamY; i--){
+		for(int j=x; j<x+tamX  ;j++){
+			dibujarPunto(i,j,0x0000);
+			
 		}	
 	}
 }
@@ -103,28 +94,13 @@ void colorFondo(uint16_t color){
 	}
 };
 
-void dibujarTile(uint16_t* imagen, int x, int y){
-	int contador = 0;
-	for(int i=x; i<x+20; i++){
-		for(int j=y;j<y+18;j++){
-			dibujarPunto(i,j,imagen[contador]);
-			contador++;	
-		}	
-	}
-}
 
-void dibujarTileColor(uint16_t color, int x, int y){
-	for(int i=x; i<x+20; i++){
-		for(int j=y;j<y+18;j++){
-			dibujarPunto(i,j,color);	
-		}	
-	}
-}
+
 
 
 void lcd_init(void){
 
-	
+	spiInit();
 	
 	//Inicialización de la Pantalla
 	escribirLCD(0,0x0000);
