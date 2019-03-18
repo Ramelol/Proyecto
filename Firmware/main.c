@@ -576,32 +576,6 @@ static void verificarCorazones(void){
 		over(); 
         }
 }
-static void console_service(void)
-{
-	char *str;
-	char *token;
-
-	str = readstr();
-	if(str == NULL) return;
-	token = get_token(&str);
-	if(strcmp(token, "help") == 0)
-		help();
-	else if(strcmp(token, "reboot") == 0)
-		reboot();
-	else if(strcmp(token, "sdtest") == 0){
-		spiSDInit();
-		sdInit();
-		//escribirNave1();
-		//printf("AAA");
-		//leerBloque();
-		//escribirBloque( 0x00,0x00000000);		
-		//leerBloque (0x00000000);
-	}
-	else if(strcmp(token, "game") == 0){
-		gameTest();
-	}
-	prompt();
-}
 
 void aumentarNivel(void){
 	nivel++;
@@ -623,8 +597,6 @@ int main(void)
 	uart_init();
 	puts("\nTEST PROYECTO FINAL  "__DATE__" "__TIME__"\n");
 	while(gameOver==0) {
-		//printf("%i \n",buttons_in_read());
-		//console_service();
 		if(start == 0){
 			vidas = 3;
 			gameTest();
