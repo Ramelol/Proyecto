@@ -25,14 +25,13 @@ from btn_itrupt import*
 
 _io = [
 
-
-    ("user_btn", 0, Pins("H16"), IOStandard("LVCMOS33")),#h16
-    ("user_btn", 1, Pins("G13"), IOStandard("LVCMOS33")),
+    ("user_btn", 0, Pins("M18"), IOStandard("LVCMOS33")),#h16
+    ("user_btn", 1, Pins("M17"), IOStandard("LVCMOS33")),
     ("user_btn", 2, Pins("H14"), IOStandard("LVCMOS33")),
-    ("user_btn", 3, Pins("G16"), IOStandard("LVCMOS33")),
+    ("user_btn", 3, Pins("P17"), IOStandard("LVCMOS33")),
     ("user_btn", 4, Pins("F16"), IOStandard("LVCMOS33")),
     ("user_btn", 5, Pins("D14"), IOStandard("LVCMOS33")),
-    ("user_btn", 6, Pins("E16"), IOStandard("LVCMOS33")),
+    ("user_btn", 6, Pins("N17"), IOStandard("LVCMOS33")),
     ("user_btn", 7, Pins("F13"), IOStandard("LVCMOS33")),
 
     ("clk100", 0, Pins("E3"), IOStandard("LVCMOS33")),
@@ -55,6 +54,7 @@ _io = [
     ("pantalla_control",  0, Pins("E17"), IOStandard("LVCMOS33")), #led
     ("pantalla_control",  1, Pins("D18"), IOStandard("LVCMOS33")), #rs
     ("pantalla_control",  2, Pins("E18"), IOStandard("LVCMOS33")), #reset
+
     ("led_GB",  0, Pins("F18"), IOStandard("LVCMOS33")), #ledAzul
 
     ("sdcard_spi", 0,
@@ -104,7 +104,6 @@ class BaseSoC(SoCCore):
     # Peripherals CSR declaration
     csr_peripherals = [
         "dna",
-        "xadc",
         "user_btn",
 	"pantalla_spi",
 	"pantalla_control",
@@ -135,17 +134,13 @@ class BaseSoC(SoCCore):
         # FPGA identification
         self.submodules.dna = dna.DNA()
 
-        # FPGA Temperature/Voltage
-        self.submodules.xadc = xadc.XADC()
-
-   
         # Buttons
         user_buttons = Cat(*[platform.request("user_btn", i) for i in range(8)])
         self.submodules.buttons = btnintrupt(user_buttons)
 
 	#LedAzul
         user_led = Cat(*[platform.request("led_GB", i) for i in range(1)])
-        self.submodules.pantalla_control = Led(user_led)
+        self.submodules.led_GB = Led(user_led)
 	#spiLCD
         user_control = Cat(*[platform.request("pantalla_control", i) for i in range(3)])
         self.submodules.pantalla_spi = SPIMaster(platform.request("pantalla_spi"))        
